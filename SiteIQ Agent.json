@@ -1,0 +1,465 @@
+{
+  "name": "SiteIQ Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "siteiq",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "6f04335f-0eb0-49e7-b2d0-f39b9f1c5e50",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        160
+      ],
+      "webhookId": "siteiq-agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $input.first().json.body || $input.first().json;\nreturn [{ json: {\n  action: (b.action || 'ask').toLowerCase(),\n  url: b.url || '',\n  question: b.question || '',\n  website_id: b.website_id || ''\n}}];"
+      },
+      "id": "4529e2d5-a223-4af9-a4f4-40e107e97af5",
+      "name": "Parse Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-crawl",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "crawl",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5566dca5-4343-4b1b-a5f3-e8178310f56f",
+      "name": "Is Crawl?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wynter-proconciliation-kaeden.ngrok-free.dev/crawl",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $json.url }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "a9f15f64-9048-4a90-8f79-d3e6e603d5c5",
+      "name": "POST /crawl",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: $json.status || 'crawling', website_id: $json.website_id || '', message: 'Crawling started! Pages will be indexed shortly.' }) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "56dc3420-9fa8-45e0-8ec8-0f18af000fb6",
+      "name": "Respond: Crawl Started",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-status",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "status",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "43e35bfc-05b7-4953-8c2d-462fe44f9af7",
+      "name": "Is Status?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        0,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://wynter-proconciliation-kaeden.ngrok-free.dev/status",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "website_id",
+              "value": "={{ $json.website_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "764c2807-2a0d-4bec-9a25-2d4c092b5bfc",
+      "name": "GET /status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        224,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "007664c4-aa19-4c89-a376-692564460d55",
+      "name": "Respond: Status",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        448,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wynter-proconciliation-kaeden.ngrok-free.dev/start-session",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"website_id\": \"{{ $json.website_id }}\"\n}",
+        "options": {}
+      },
+      "id": "8321c833-2642-485e-b968-8b16eccbe66b",
+      "name": "POST /start-session",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        224,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wynter-proconciliation-kaeden.ngrok-free.dev/ask",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "session_id",
+              "value": "={{ $json.session_id }}"
+            },
+            {
+              "name": "question",
+              "value": "={{ $('Parse Body').first().json.question }}"
+            },
+            {
+              "name": "website_id",
+              "value": "={{ $('Parse Body').first().json.website_id }}"
+            },
+            {
+              "name": "url",
+              "value": "={{ $('Parse Body').first().json.url }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "16a0e83b-0cde-407f-8b5e-e15ae5e1bf51",
+      "name": "POST /ask",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        448,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ \n    answer: $json.text, \n    sources: $('POST /ask').first().json.sources \n}) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "608c0689-86ab-4647-8534-e4abd76e12b0",
+      "name": "Respond: Answer",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a helpful assistant for a website Q&A system.\n\nUse the context below to answer the question clearly and helpfully.\nIf exact info isn't available, use what you know from the context.\nNever say \"the content does not mention\" — give the best answer possible.\n\nContext from website:\n{{ $json.context }}\n\nUser Question: {{ $json.question }}\n\nAnswer:",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        656,
+        400
+      ],
+      "id": "37aef8c3-f381-498b-9078-a1c84aef3ba6",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        656,
+        592
+      ],
+      "id": "0dd0a3a2-5c85-4638-98cb-c81f7955de05",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "bCQOR1pXiFFRwLAM",
+          "name": "Groq account 4"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Body": {
+      "main": [
+        [
+          {
+            "node": "Is Crawl?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Crawl?": {
+      "main": [
+        [
+          {
+            "node": "POST /crawl",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Is Status?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST /crawl": {
+      "main": [
+        [
+          {
+            "node": "Respond: Crawl Started",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Status?": {
+      "main": [
+        [
+          {
+            "node": "GET /status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "POST /start-session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET /status": {
+      "main": [
+        [
+          {
+            "node": "Respond: Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST /start-session": {
+      "main": [
+        [
+          {
+            "node": "POST /ask",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST /ask": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond: Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "fd8a4197-68fd-41f6-a492-8853abb12f14",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ccef1841c8d66a631655540fa8eb5d7cb7f23c622506dc60eead49412682a94f"
+  },
+  "id": "NW3AN2QnYz4K2iys",
+  "tags": []
+}
