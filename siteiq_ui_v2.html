@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SiteIQ Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#060F1E;--navy2:#0A1929;--navy3:#0F2744;
+  --blue:#0D6EFD;--teal:#00B4D8;--mint:#06D6A0;
+  --white:#FFFFFF;--off:#F0F6FF;--gray:#8899AA;--lgray:#C8D6E8;
+  --red:#FF4757;--amber:#FFB800;--green:#06D6A0;
+  --border:#1A2E47;--card:#0D1F35;
+}
+body{font-family:'Space Grotesk',sans-serif;background:var(--navy);color:var(--white);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+/* ── AUTH SCREEN ── */
+#authScreen{
+  position:fixed;inset:0;z-index:200;
+  background:var(--navy);
+  display:flex;align-items:center;justify-content:center;
+  background-image:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(13,110,253,0.15),transparent),
+                   radial-gradient(ellipse 60% 40% at 80% 80%,rgba(6,214,160,0.08),transparent);
+}
+.auth-box{
+  width:420px;max-width:95vw;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:40px;
+  box-shadow:0 40px 80px rgba(0,0,0,0.5);
+  animation:slideUp 0.4s ease;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center}
+.auth-logo-icon{
+  width:44px;height:44px;border-radius:12px;
+  background:linear-gradient(135deg,var(--teal),var(--mint));
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:800;color:var(--navy);
+}
+.auth-logo-text{font-size:22px;font-weight:700;color:var(--white)}
+.auth-logo-text span{color:var(--mint)}
+.auth-tabs{display:flex;gap:4px;background:var(--navy);border-radius:10px;padding:4px;margin-bottom:28px}
+.auth-tab{
+  flex:1;padding:8px;border:none;border-radius:7px;cursor:pointer;
+  font-size:14px;font-weight:600;font-family:inherit;
+  background:transparent;color:var(--gray);transition:all 0.2s;
+}
+.auth-tab.active{background:var(--navy3);color:var(--white)}
+.auth-form{display:flex;flex-direction:column;gap:16px}
+.form-group label{display:block;font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.form-group input{
+  width:100%;background:var(--navy);border:1.5px solid var(--border);
+  border-radius:10px;padding:12px 16px;font-size:14px;color:var(--white);
+  outline:none;font-family:inherit;transition:border-color 0.2s;
+}
+.form-group input:focus{border-color:var(--teal)}
+.form-group input::placeholder{color:#3A5070}
+.btn-auth{
+  width:100%;background:linear-gradient(135deg,var(--teal),var(--mint));
+  color:var(--navy);border:none;border-radius:10px;padding:13px;
+  font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;
+  transition:opacity 0.2s;margin-top:4px;
+}
+.btn-auth:hover{opacity:0.9}
+.auth-error{
+  background:rgba(255,71,87,0.12);border:1px solid rgba(255,71,87,0.3);
+  border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);
+  display:none;
+}
+.auth-error.show{display:block}
+.auth-footer{text-align:center;font-size:12px;color:var(--gray);margin-top:20px}
+
+/* ── HEADER ── */
+header{
+  background:var(--navy2);border-bottom:1px solid var(--border);
+  padding:0 20px;height:54px;display:flex;align-items:center;
+  justify-content:space-between;flex-shrink:0;
+}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{
+  width:30px;height:30px;border-radius:8px;
+  background:linear-gradient(135deg,var(--teal),var(--mint));
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:800;color:var(--navy);
+}
+.logo-text{font-size:17px;font-weight:700}
+.logo-text span{color:var(--mint)}
+.header-right{display:flex;align-items:center;gap:12px}
+.user-badge{
+  display:flex;align-items:center;gap:8px;
+  background:var(--navy3);border:1px solid var(--border);
+  border-radius:8px;padding:5px 12px;font-size:13px;
+}
+.user-avatar{
+  width:22px;height:22px;border-radius:50%;
+  background:linear-gradient(135deg,var(--teal),var(--mint));
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:var(--navy);
+}
+.btn-logout{
+  background:transparent;border:1px solid var(--border);
+  color:var(--gray);padding:5px 12px;border-radius:7px;
+  cursor:pointer;font-size:12px;font-family:inherit;transition:all 0.2s;
+}
+.btn-logout:hover{border-color:var(--red);color:var(--red)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--red);transition:background 0.3s}
+.dot.on{background:var(--green)}
+.dot-label{font-size:12px;color:var(--gray)}
+.btn-settings{
+  background:transparent;border:1px solid var(--border);
+  color:var(--gray);padding:5px 12px;border-radius:7px;
+  cursor:pointer;font-size:12px;font-family:inherit;
+  display:flex;align-items:center;gap:5px;transition:all 0.2s;
+}
+.btn-settings:hover{border-color:var(--teal);color:var(--teal)}
+
+/* ── URL BAR ── */
+.url-bar{
+  background:var(--navy2);border-bottom:1px solid var(--border);
+  padding:10px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.url-wrap{
+  flex:1;display:flex;align-items:center;
+  background:var(--navy);border:1.5px solid var(--border);
+  border-radius:9px;padding:0 14px;gap:8px;transition:border-color 0.2s;
+  position:relative;
+}
+.url-wrap.locked{background:rgba(6,214,160,0.04);border-color:rgba(6,214,160,0.3)}
+.url-wrap:not(.locked):focus-within{border-color:var(--teal)}
+.url-icon{font-size:14px;flex-shrink:0}
+.url-input{
+  flex:1;border:none;background:transparent;outline:none;
+  font-size:13px;color:var(--white);padding:9px 0;font-family:'JetBrains Mono',monospace;
+}
+.url-input:disabled{color:var(--gray);cursor:not-allowed}
+.lock-badge{
+  display:none;align-items:center;gap:5px;
+  background:rgba(6,214,160,0.15);color:var(--mint);
+  border-radius:5px;padding:3px 9px;font-size:11px;font-weight:600;
+  white-space:nowrap;
+}
+.lock-badge.show{display:flex}
+.cached-badge{
+  display:none;align-items:center;gap:5px;
+  background:rgba(0,180,216,0.15);color:var(--teal);
+  border-radius:5px;padding:3px 9px;font-size:11px;font-weight:600;
+  white-space:nowrap;cursor:default;
+}
+.cached-badge.show{display:flex}
+.btn-new-url{
+  background:transparent;border:1px solid var(--border);
+  color:var(--gray);padding:8px 14px;border-radius:8px;
+  cursor:pointer;font-size:12px;font-family:inherit;
+  white-space:nowrap;transition:all 0.2s;flex-shrink:0;
+}
+.btn-new-url:hover{border-color:var(--teal);color:var(--teal)}
+.btn-crawl{
+  background:linear-gradient(135deg,var(--teal),var(--blue));
+  color:var(--white);border:none;border-radius:9px;padding:9px 18px;
+  cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;
+  display:flex;align-items:center;gap:6px;transition:opacity 0.2s;
+  white-space:nowrap;flex-shrink:0;
+}
+.btn-crawl:hover:not(:disabled){opacity:0.85}
+.btn-crawl:disabled{opacity:0.4;cursor:not-allowed}
+
+/* ── CRAWL STATUS ── */
+.crawl-bar{
+  display:none;align-items:center;gap:10px;
+  padding:7px 20px;font-size:12px;flex-shrink:0;
+  background:rgba(13,110,253,0.08);border-bottom:1px solid rgba(13,110,253,0.2);
+  color:var(--teal);
+}
+.crawl-bar.show{display:flex}
+.crawl-bar.done{background:rgba(6,214,160,0.08);border-color:rgba(6,214,160,0.2);color:var(--mint)}
+.crawl-bar.err{background:rgba(255,71,87,0.08);border-color:rgba(255,71,87,0.2);color:var(--red)}
+.prog-wrap{flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden}
+.prog{height:100%;background:var(--teal);border-radius:2px;transition:width 0.5s ease;width:0%}
+.crawl-bar.done .prog{background:var(--mint)}
+.spin{width:13px;height:13px;border:2px solid rgba(0,180,216,0.3);border-top-color:var(--teal);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.crawl-bar.done .spin,.crawl-bar.err .spin{display:none}
+.pages-count{font-size:11px;color:var(--gray);white-space:nowrap;font-family:'JetBrains Mono',monospace}
+
+/* ── MAIN ── */
+.main{display:flex;flex:1;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:210px;background:var(--navy2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;
+}
+.sidebar-head{
+  padding:14px 14px 8px;font-size:10px;font-weight:700;
+  color:var(--gray);text-transform:uppercase;letter-spacing:1.5px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.chat-list{flex:1;overflow-y:auto;padding:4px 8px 8px}
+.chat-list::-webkit-scrollbar{width:3px}
+.chat-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.chat-item{
+  padding:9px 10px;border-radius:8px;cursor:pointer;
+  margin-bottom:2px;transition:background 0.15s;border:1px solid transparent;
+}
+.chat-item:hover{background:var(--navy3)}
+.chat-item.active{background:var(--navy3);border-color:var(--border)}
+.chat-domain{font-size:12px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-time{font-size:10px;color:var(--gray);margin-top:2px;font-family:'JetBrains Mono',monospace}
+.chat-pages{font-size:10px;color:var(--teal);margin-top:1px}
+.sidebar-empty{padding:20px 14px;font-size:12px;color:#2A4060;text-align:center;line-height:1.8}
+
+/* ── CHAT ── */
+.chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
+.messages::-webkit-scrollbar{width:4px}
+.messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+.welcome{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;gap:14px;text-align:center;padding:40px;
+}
+.welcome-icon{font-size:52px;filter:drop-shadow(0 0 20px rgba(6,214,160,0.4))}
+.welcome h2{font-size:24px;font-weight:700;color:var(--white)}
+.welcome p{font-size:14px;color:var(--gray);max-width:360px;line-height:1.7}
+.welcome-steps{display:flex;flex-direction:column;gap:8px;width:100%;max-width:320px;margin-top:8px}
+.step{
+  display:flex;align-items:center;gap:12px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:10px 14px;text-align:left;
+}
+.step-num{
+  width:24px;height:24px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--teal),var(--mint));
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:var(--navy);
+}
+.step-text{font-size:13px;color:var(--lgray)}
+
+/* Messages */
+.msg{display:flex;gap:10px;max-width:82%;animation:msgIn 0.2s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.msg-av{
+  width:30px;height:30px;border-radius:50%;flex-shrink:0;margin-top:2px;
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+}
+.msg.ai .msg-av{background:linear-gradient(135deg,var(--navy3),var(--card));border:1px solid var(--border);color:var(--mint)}
+.msg.user .msg-av{background:linear-gradient(135deg,var(--teal),var(--blue));color:var(--white)}
+.msg-body{display:flex;flex-direction:column;gap:7px}
+.msg-bubble{
+  padding:11px 15px;border-radius:12px;font-size:14px;line-height:1.7;
+}
+.msg.ai .msg-bubble{
+  background:var(--card);border:1px solid var(--border);
+  border-top-left-radius:4px;color:var(--lgray);
+}
+.msg.user .msg-bubble{
+  background:linear-gradient(135deg,var(--teal),var(--blue));
+  color:var(--white);border-top-right-radius:4px;
+}
+.sources{display:flex;flex-wrap:wrap;gap:5px}
+.src-tag{
+  background:rgba(0,180,216,0.1);border:1px solid rgba(0,180,216,0.25);
+  border-radius:5px;padding:3px 9px;font-size:11px;color:var(--teal);
+  text-decoration:none;display:flex;align-items:center;gap:4px;transition:all 0.15s;
+  font-family:'JetBrains Mono',monospace;
+}
+.src-tag:hover{background:rgba(0,180,216,0.2)}
+.typing-wrap .msg-bubble{padding:12px 16px}
+.typing{display:flex;align-items:center;gap:5px}
+.tdot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:td 1.2s infinite}
+.tdot:nth-child(2){animation-delay:.2s}
+.tdot:nth-child(3){animation-delay:.4s}
+@keyframes td{0%,60%,100%{transform:translateY(0);opacity:0.4}30%{transform:translateY(-5px);opacity:1}}
+.sys-msg{text-align:center;font-size:11px;color:#2A4060;padding:2px 0;font-family:'JetBrains Mono',monospace}
+
+/* ── INPUT ── */
+.input-hint{
+  text-align:center;font-size:11px;padding:4px 20px;flex-shrink:0;
+  color:var(--gray);font-family:'JetBrains Mono',monospace;
+}
+.input-bar{
+  background:var(--navy2);border-top:1px solid var(--border);
+  padding:12px 20px;display:flex;align-items:flex-end;gap:10px;flex-shrink:0;
+}
+.input-wrap{
+  flex:1;background:var(--navy);border:1.5px solid var(--border);
+  border-radius:10px;display:flex;align-items:flex-end;padding:8px 12px;gap:8px;
+  transition:border-color 0.2s;
+}
+.input-wrap:focus-within{border-color:var(--teal)}
+.msg-input{
+  flex:1;border:none;background:transparent;outline:none;
+  font-size:14px;color:var(--white);resize:none;
+  min-height:22px;max-height:100px;line-height:1.5;font-family:inherit;
+}
+.msg-input::placeholder{color:#2A4060}
+.btn-send{
+  width:36px;height:36px;background:linear-gradient(135deg,var(--teal),var(--blue));
+  border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;transition:opacity 0.2s;
+}
+.btn-send:hover:not(:disabled){opacity:0.85}
+.btn-send:disabled{opacity:0.3;cursor:not-allowed}
+.btn-send svg{fill:white}
+
+/* ── MODAL ── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(6,15,30,0.75);z-index:100;
+  align-items:center;justify-content:center;backdrop-filter:blur(4px);
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:28px;width:460px;max-width:95vw;
+  box-shadow:0 30px 60px rgba(0,0,0,0.4);animation:slideUp 0.3s ease;
+}
+.modal h2{font-size:17px;font-weight:700;margin-bottom:5px}
+.modal p{font-size:13px;color:var(--gray);margin-bottom:20px;line-height:1.6}
+.modal .form-group{margin-bottom:14px}
+.modal-hint{
+  background:rgba(255,255,255,0.03);border:1px solid var(--border);
+  border-radius:8px;padding:12px;font-size:12px;color:var(--gray);
+  margin-bottom:18px;line-height:1.8;
+}
+.modal-hint code{
+  background:rgba(0,180,216,0.15);color:var(--teal);
+  padding:1px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;
+}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
+.btn-cancel{
+  background:transparent;border:1px solid var(--border);color:var(--gray);
+  padding:9px 18px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;
+}
+.btn-cancel:hover{border-color:var(--lgray);color:var(--white)}
+.btn-save{
+  background:linear-gradient(135deg,var(--teal),var(--blue));
+  color:var(--white);border:none;padding:9px 18px;
+  border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;
+}
+</style>
+</head>
+<body>
+
+<!-- ── AUTH SCREEN ── -->
+<div id="authScreen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">S</div>
+      <div class="auth-logo-text">Site<span>IQ</span> Agent</div>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Login</button>
+      <button class="auth-tab" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+    <div class="auth-form" id="authForm">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="authUser" placeholder="Enter username" autocomplete="username"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="authPass" placeholder="Enter password" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter')doAuth()"/>
+      </div>
+      <div class="form-group" id="confirmGroup" style="display:none">
+        <label>Confirm Password</label>
+        <input type="password" id="authConfirm" placeholder="Confirm password" autocomplete="new-password"
+          onkeydown="if(event.key==='Enter')doAuth()"/>
+      </div>
+      <div class="auth-error" id="authError"></div>
+      <button class="btn-auth" id="authBtn" onclick="doAuth()">Login</button>
+    </div>
+    <div class="auth-footer">ADBMS Project · Dawood University · Batch 24F</div>
+  </div>
+</div>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">S</div>
+    <div class="logo-text">Site<span>IQ</span> Agent</div>
+  </div>
+  <div class="header-right">
+    <div class="dot" id="dot"></div>
+    <span class="dot-label" id="dotLabel">Not connected</span>
+    <div class="user-badge">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <span id="userName" style="font-size:13px;color:var(--lgray)">Guest</span>
+    </div>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+    <button class="btn-settings" onclick="openSettings()">⚙ Settings</button>
+  </div>
+</header>
+
+<!-- ── URL BAR ── -->
+<div class="url-bar">
+  <div class="url-wrap" id="urlWrap">
+    <span class="url-icon">🌐</span>
+    <input type="url" class="url-input" id="urlInput"
+      placeholder="https://example.com — paste website URL here"/>
+    <div class="cached-badge" id="cachedBadge">⚡ Already crawled</div>
+    <div class="lock-badge" id="lockBadge">🔒 Locked</div>
+  </div>
+  <button class="btn-new-url" id="newUrlBtn" onclick="resetUrl()" style="display:none">+ New URL</button>
+  <button class="btn-crawl" id="crawlBtn" onclick="startCrawl()">🕷 Crawl Website</button>
+</div>
+
+<!-- ── CRAWL STATUS BAR ── -->
+<div class="crawl-bar" id="crawlBar">
+  <div class="spin"></div>
+  <span id="crawlText">Starting crawl...</span>
+  <div class="prog-wrap"><div class="prog" id="prog"></div></div>
+  <span class="pages-count" id="pagesCount"></span>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-head">
+      History
+    </div>
+    <div class="chat-list" id="chatList">
+      <div class="sidebar-empty">No sites yet.<br>Crawl a URL to start.</div>
+    </div>
+  </div>
+  <div class="chat-area">
+    <div class="messages" id="messages">
+      <div class="welcome" id="welcome">
+        <div class="welcome-icon">🤖</div>
+        <h2>Welcome to SiteIQ</h2>
+        <p>Crawl any website and ask questions in natural language.</p>
+        <div class="welcome-steps">
+          <div class="step"><div class="step-num">1</div><div class="step-text">Click Settings → enter n8n webhook URL</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-text">Paste a website URL in the bar above</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-text">Click Crawl Website and wait</div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-text">Ask any question below ↓</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="input-hint" id="inputHint">Configure webhook URL in Settings to get started</div>
+    <div class="input-bar">
+      <div class="input-wrap">
+        <textarea class="msg-input" id="msgInput" rows="1"
+          placeholder="Ask anything about this website..."
+          onkeydown="handleKey(event)" oninput="onInputChange(this)"></textarea>
+      </div>
+      <button class="btn-send" id="sendBtn" onclick="sendMsg()" disabled>
+        <svg width="15" height="15" viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SETTINGS MODAL ── -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h2>⚙ Settings</h2>
+    <p>Connect SiteIQ to your n8n workflow.</p>
+    <div class="form-group">
+      <label>n8n Webhook URL (Production)</label>
+      <input type="url" id="webhookInput" placeholder="https://your-n8n.app.n8n.cloud/webhook/siteiq"
+        style="background:var(--navy);border:1.5px solid var(--border);border-radius:9px;padding:11px 14px;font-size:13px;color:var(--white);outline:none;width:100%;font-family:'JetBrains Mono',monospace;"/>
+    </div>
+    <div class="modal-hint">
+      In n8n → open <code>SiteIQ Agent</code> workflow → click Webhook node →
+      copy the <strong>Production URL</strong> (not Test URL).<br><br>
+      It looks like: <code>https://xxx.app.n8n.cloud/webhook/siteiq</code>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeSettings()">Cancel</button>
+      <button class="btn-save" onclick="saveSettings()">Save & Connect</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STORAGE HELPERS ────────────────────────────────────────────────────────
+const store = {
+  get: k => { try { return JSON.parse(localStorage.getItem(k)) } catch { return null } },
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+  del: k => localStorage.removeItem(k)
+};
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let currentUser = null;
+let webhookUrl = '';
+let currentUrl = '';
+let currentWebsiteId = '';
+let isLocked = false;
+let statusPoller = null;
+let authMode = 'login';
+
+// ── AUTH ───────────────────────────────────────────────────────────────────
+function switchTab(mode) {
+  authMode = mode;
+  document.querySelectorAll('.auth-tab').forEach((t,i) => {
+    t.classList.toggle('active', (i===0 && mode==='login') || (i===1 && mode==='signup'));
+  });
+  document.getElementById('confirmGroup').style.display = mode === 'signup' ? 'block' : 'none';
+  document.getElementById('authBtn').textContent = mode === 'login' ? 'Login' : 'Create Account';
+  document.getElementById('authError').classList.remove('show');
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('authError');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function doAuth() {
+  const user = document.getElementById('authUser').value.trim();
+  const pass = document.getElementById('authPass').value;
+  const confirm = document.getElementById('authConfirm').value;
+
+  if (!user || !pass) return showAuthError('Please fill in all fields.');
+
+  const users = store.get('siteiq_users') || {};
+
+  if (authMode === 'signup') {
+    if (pass.length < 4) return showAuthError('Password must be at least 4 characters.');
+    if (pass !== confirm) return showAuthError('Passwords do not match.');
+    if (users[user]) return showAuthError('Username already taken. Please login.');
+    users[user] = btoa(pass); // simple encoding for demo
+    store.set('siteiq_users', users);
+    showAuthError('');
+    loginUser(user);
+  } else {
+    if (!users[user] || users[user] !== btoa(pass)) return showAuthError('Invalid username or password.');
+    loginUser(user);
+  }
+}
+
+function loginUser(username) {
+  currentUser = username;
+  store.set('siteiq_session', username);
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('userName').textContent = username;
+  document.getElementById('userAvatar').textContent = username[0].toUpperCase();
+  loadUserData();
+}
+
+function logout() {
+  store.del('siteiq_session');
+  currentUser = null;
+  currentUrl = '';
+  currentWebsiteId = '';
+  isLocked = false;
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('authUser').value = '';
+  document.getElementById('authPass').value = '';
+  document.getElementById('authError').classList.remove('show');
+  // reset UI
+  document.getElementById('messages').innerHTML = `<div class="welcome" id="welcome">
+    <div class="welcome-icon">🤖</div><h2>Welcome to SiteIQ</h2>
+    <p>Crawl any website and ask questions in natural language.</p></div>`;
+  document.getElementById('urlInput').value = '';
+  document.getElementById('urlInput').disabled = false;
+  document.getElementById('urlWrap').classList.remove('locked');
+  document.getElementById('lockBadge').classList.remove('show');
+  document.getElementById('cachedBadge').classList.remove('show');
+  document.getElementById('newUrlBtn').style.display = 'none';
+  document.getElementById('chatList').innerHTML = '<div class="sidebar-empty">No sites yet.<br>Crawl a URL to start.</div>';
+  document.getElementById('crawlBar').className = 'crawl-bar';
+  document.getElementById('sendBtn').disabled = true;
+  switchTab('login');
+}
+
+// ── INIT / LOAD USER DATA ──────────────────────────────────────────────────
+function init() {
+  const session = store.get('siteiq_session');
+  if (session) {
+    const users = store.get('siteiq_users') || {};
+    if (users[session]) loginUser(session);
+  }
+}
+
+function loadUserData() {
+  webhookUrl = store.get('siteiq_webhook') || '';
+  if (webhookUrl) {
+    document.getElementById('webhookInput').value = webhookUrl;
+    setConnected(true);
+  }
+  renderSidebar();
+  updateHint();
+}
+
+function getUserHistory() {
+  if (!currentUser) return [];
+  return store.get(`siteiq_hist_${currentUser}`) || [];
+}
+
+function saveUserHistory(hist) {
+  store.set(`siteiq_hist_${currentUser}`, hist);
+}
+
+// ── CONNECTION ─────────────────────────────────────────────────────────────
+function setConnected(yes) {
+  document.getElementById('dot').className = 'dot' + (yes ? ' on' : '');
+  document.getElementById('dotLabel').textContent = yes ? 'Connected' : 'Not connected';
+}
+
+function updateHint() {
+  const hint = document.getElementById('inputHint');
+  if (!webhookUrl) { hint.textContent = '⚠ Configure webhook URL in Settings'; hint.style.color = 'var(--amber)'; return; }
+  if (!currentWebsiteId) { hint.textContent = '👆 Crawl a website first, then ask questions'; hint.style.color = 'var(--gray)'; return; }
+  hint.textContent = `🔒 Chatting about: ${getDomain(currentUrl)}`;
+  hint.style.color = 'var(--mint)';
+}
+
+// ── SETTINGS ──────────────────────────────────────────────────────────────
+function openSettings() { document.getElementById('settingsModal').classList.add('open'); }
+function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
+function saveSettings() {
+  const v = document.getElementById('webhookInput').value.trim();
+  if (!v) return alert('Enter your n8n webhook URL.');
+  webhookUrl = v;
+  store.set('siteiq_webhook', v);
+  setConnected(true);
+  updateHint();
+  updateSendBtn();
+  closeSettings();
+  sysMsg('✅ Webhook connected. Paste a URL above and start crawling.');
+}
+
+// ── URL / CRAWL ────────────────────────────────────────────────────────────
+function getDomain(url) { try { return new URL(url).hostname; } catch { return url; } }
+
+function lockUrl(url, websiteId) {
+  isLocked = true;
+  currentUrl = url;
+  currentWebsiteId = websiteId;
+  document.getElementById('urlInput').disabled = true;
+  document.getElementById('urlWrap').classList.add('locked');
+  document.getElementById('lockBadge').classList.add('show');
+  document.getElementById('cachedBadge').classList.remove('show');
+  document.getElementById('newUrlBtn').style.display = 'block';
+  document.getElementById('crawlBtn').style.display = 'none';
+  updateHint();
+  updateSendBtn();
+}
+
+function resetUrl() {
+  if (statusPoller) clearInterval(statusPoller);
+  isLocked = false;
+  currentUrl = '';
+  currentWebsiteId = '';
+  document.getElementById('urlInput').disabled = false;
+  document.getElementById('urlInput').value = '';
+  document.getElementById('urlWrap').classList.remove('locked');
+  document.getElementById('lockBadge').classList.remove('show');
+  document.getElementById('cachedBadge').classList.remove('show');
+  document.getElementById('newUrlBtn').style.display = 'none';
+  document.getElementById('crawlBtn').style.display = 'flex';
+  document.getElementById('crawlBtn').disabled = false;
+  document.getElementById('crawlBtn').innerHTML = '🕷 Crawl Website';
+  document.getElementById('crawlBar').className = 'crawl-bar';
+  document.getElementById('sendBtn').disabled = true;
+  updateHint();
+  sysMsg('↩ Enter a new URL to crawl.');
+}
+
+async function startCrawl() {
+  if (!webhookUrl) { openSettings(); return; }
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url || !url.startsWith('http')) return alert('Enter a valid URL starting with http:// or https://');
+
+  // ── Check if already crawled ──────────────────────────────────────────
+  const hist = getUserHistory();
+  const existing = hist.find(h => h.url === url || h.url === url.replace(/\/$/, '') || (url.replace(/\/$/, '')) === h.url.replace(/\/$/, ''));
+  if (existing && existing.website_id) {
+    // Use cached — no re-crawl!
+    document.getElementById('cachedBadge').classList.add('show');
+    setCrawlBar('done', `⚡ Using cached data — ${existing.pages || '?'} pages already indexed`, 100, existing.pages);
+    lockUrl(url, existing.website_id);
+    addToSidebar(url, existing.website_id, existing.pages, true);
+    hideWelcome();
+    sysMsg(`⚡ <strong>${getDomain(url)}</strong> already crawled — using cached data. Ask your question!`);
+    return;
+  }
+
+  // ── Fresh crawl ───────────────────────────────────────────────────────
+  hideWelcome();
+  document.getElementById('crawlBtn').disabled = true;
+  document.getElementById('crawlBtn').textContent = '⏳ Crawling...';
+  setCrawlBar('crawling', 'Starting crawl...', 5);
+
+  try {
+    const res = await webhook({ action: 'crawl', url });
+    const wid = res.website_id || '';
+    currentUrl = url;
+    currentWebsiteId = wid;
+    setCrawlBar('crawling', `Crawling ${getDomain(url)}...`, 15);
+    sysMsg(`🕷 Crawl started for <strong>${getDomain(url)}</strong>`);
+    if (wid) startPolling(url, wid);
+  } catch (e) {
+    setCrawlBar('err', '❌ Could not reach n8n. Is workflow active?', 0);
+    document.getElementById('crawlBtn').disabled = false;
+    document.getElementById('crawlBtn').innerHTML = '🕷 Crawl Website';
+  }
+}
+
+function startPolling(url, wid) {
+  if (statusPoller) clearInterval(statusPoller);
+  let polls = 0;
+  statusPoller = setInterval(async () => {
+    polls++;
+    try {
+      const res = await webhook({ action: 'status', website_id: wid });
+      const crawled = res.pages_crawled || 0;
+      const total = res.total_pages || 0;
+      const pct = total > 0 ? Math.min(Math.round(crawled/total*100), 99) : Math.min(15 + polls*4, 90);
+      setCrawlBar('crawling', `Indexing pages...`, pct, crawled > 0 ? `${crawled} pages` : '');
+
+      if (res.status === 'complete' || crawled >= total && total > 0) {
+        clearInterval(statusPoller);
+        onCrawlComplete(url, wid, crawled || total);
+      }
+    } catch {}
+    if (polls > 40) { clearInterval(statusPoller); onCrawlComplete(url, wid, '?'); }
+  }, 2500); // poll every 2.5s instead of 4s for faster UI update
+}
+
+function onCrawlComplete(url, wid, pages) {
+  setCrawlBar('done', `✅ Crawl complete — ${pages} pages indexed`, 100, pages > 0 ? `${pages} pages` : '');
+  lockUrl(url, wid);
+  addToSidebar(url, wid, pages);
+  sysMsg(`✅ <strong>${getDomain(url)}</strong> ready! Ask me anything about it.`);
+  // Save to user history
+  const hist = getUserHistory().filter(h => h.url.replace(/\/$/,'') !== url.replace(/\/$/,''));
+  hist.unshift({ url, website_id: wid, pages, time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) });
+  saveUserHistory(hist.slice(0,15));
+}
+
+function setCrawlBar(type, text, pct, pages) {
+  const bar = document.getElementById('crawlBar');
+  bar.className = 'crawl-bar show' + (type==='done'?' done':type==='err'?' err':'');
+  document.getElementById('crawlText').textContent = text;
+  document.getElementById('prog').style.width = pct + '%';
+  document.getElementById('pagesCount').textContent = pages || '';
+}
+
+// ── SIDEBAR ────────────────────────────────────────────────────────────────
+function renderSidebar() {
+  const hist = getUserHistory();
+  const list = document.getElementById('chatList');
+  if (!hist.length) { list.innerHTML = '<div class="sidebar-empty">No sites yet.<br>Crawl a URL to start.</div>'; return; }
+  list.innerHTML = '';
+  hist.forEach(h => {
+    const item = document.createElement('div');
+    item.className = 'chat-item';
+    item.dataset.url = h.url;
+    item.innerHTML = `<div class="chat-domain">${getDomain(h.url)}</div>
+      <div class="chat-time">${h.time || ''}</div>
+      <div class="chat-pages">${h.pages ? h.pages + ' pages' : ''}</div>`;
+    item.onclick = () => loadFromHistory(h, item);
+    list.appendChild(item);
+  });
+}
+
+function addToSidebar(url, wid, pages, cached) {
+  const list = document.getElementById('chatList');
+  const empty = list.querySelector('.sidebar-empty');
+  if (empty) empty.remove();
+  const old = list.querySelector(`[data-url="${url}"]`);
+  if (old) old.remove();
+  const item = document.createElement('div');
+  item.className = 'chat-item active';
+  item.dataset.url = url;
+  item.innerHTML = `<div class="chat-domain">${getDomain(url)}</div>
+    <div class="chat-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
+    <div class="chat-pages" style="color:${cached?'var(--teal)':'var(--green)'}">${cached?'⚡ cached':'✅ '+(pages||'?')+' pages'}</div>`;
+  item.onclick = () => loadFromHistory({url, website_id: wid, pages}, item);
+  list.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active'));
+  list.prepend(item);
+}
+
+function loadFromHistory(h, item) {
+  list.querySelectorAll && document.getElementById('chatList').querySelectorAll('.chat-item').forEach(i => i.classList.remove('active'));
+  if (item) item.classList.add('active');
+  document.getElementById('urlInput').value = h.url;
+  lockUrl(h.url, h.website_id);
+  document.getElementById('cachedBadge').classList.add('show');
+  setCrawlBar('done', `⚡ ${getDomain(h.url)} — ${h.pages||'?'} pages indexed`, 100, h.pages ? h.pages+' pages' : '');
+  sysMsg(`↩ Switched to <strong>${getDomain(h.url)}</strong> — ask your question!`);
+}
+
+// ── CHAT ───────────────────────────────────────────────────────────────────
+function handleKey(e) { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
+function onInputChange(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; updateSendBtn(); }
+
+function updateSendBtn() {
+  const hasQ = document.getElementById('msgInput').value.trim().length > 0;
+  document.getElementById('sendBtn').disabled = !webhookUrl || !currentWebsiteId || !hasQ;
+}
+
+async function sendMsg() {
+  const input = document.getElementById('msgInput');
+  const q = input.value.trim();
+  if (!q || !webhookUrl || !currentWebsiteId) return;
+  input.value = ''; input.style.height = 'auto'; updateSendBtn();
+  addMsg('user', q);
+  const typing = addTyping();
+  try {
+    const res = await webhook({ action:'ask', url:currentUrl, website_id:currentWebsiteId, question:q });
+    typing.remove();
+    addMsg('ai', res.answer || 'No answer found.', res.sources || []);
+  } catch {
+    typing.remove();
+    addMsg('ai', '❌ Could not get answer. Check n8n workflow is active and Python server is running.', []);
+  }
+}
+
+function addMsg(role, text, sources) {
+  const wrap = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  let srcHtml = '';
+  if (sources && sources.length) {
+    srcHtml = `<div class="sources">${sources.map(s=>`<a class="src-tag" href="${s}" target="_blank">🔗 ${getDomain(s)}</a>`).join('')}</div>`;
+  }
+  div.innerHTML = `<div class="msg-av">${role==='ai'?'🤖':'👤'}</div>
+    <div class="msg-body"><div class="msg-bubble">${fmt(text)}</div>${srcHtml}</div>`;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function addTyping() {
+  const wrap = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ai typing-wrap';
+  div.innerHTML = `<div class="msg-av">🤖</div><div class="msg-body"><div class="msg-bubble"><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div></div>`;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+  return div;
+}
+
+function sysMsg(html) {
+  const wrap = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'sys-msg';
+  div.innerHTML = html;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function hideWelcome() { const el = document.getElementById('welcome'); if (el) el.remove(); }
+
+function fmt(text) {
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+}
+
+// ── WEBHOOK ────────────────────────────────────────────────────────────────
+async function webhook(payload) {
+  const res = await fetch(webhookUrl, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+// ── MODAL CLICK OUTSIDE ────────────────────────────────────────────────────
+document.getElementById('settingsModal').addEventListener('click', function(e) { if (e.target===this) closeSettings(); });
+
+init();
+</script>
+</body>
+</html>
